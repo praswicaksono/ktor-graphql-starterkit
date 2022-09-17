@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package com.graphql.ktor
+package com.graphql.ktor.server
 
-import com.graphql.ktor.schema.models.User
 import com.expediagroup.graphql.generator.execution.GraphQLContext
 import com.expediagroup.graphql.server.execution.GraphQLContextFactory
-import io.ktor.server.request.ApplicationRequest
+import com.graphql.ktor.schema.models.User
+import io.ktor.server.request.*
+import org.koin.core.annotation.Single
 
-/**
- * Custom logic for how this example app should create its context given the [ApplicationRequest]
- */
+@Single
 class KtorGraphQLContextFactory : GraphQLContextFactory<GraphQLContext, ApplicationRequest> {
 
     override suspend fun generateContextMap(request: ApplicationRequest): Map<Any, Any> = mutableMapOf<Any, Any>(

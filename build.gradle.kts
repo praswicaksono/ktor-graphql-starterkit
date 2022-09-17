@@ -6,7 +6,7 @@ plugins {
     kotlin("jvm") version "1.7.10"
     id("com.expediagroup.graphql") version "6.2.2"
     id("io.ktor.plugin") version "2.1.1"
-    id("com.google.devtools.ksp") version "1.6.21-1.0.5"
+    id("com.google.devtools.ksp") version "1.7.10-1.0.6"
 }
 
 apply {
@@ -32,7 +32,7 @@ val ktorVersion: String by project
 val logbackVersion: String by project
 val kotlinVersion: String by project
 val koinVersion: String by project
-
+val koinAnnotationVersion: String by project
 
 dependencies {
     // https://mvnrepository.com/artifact/com.expediagroup/graphql-kotlin-server
@@ -43,8 +43,11 @@ dependencies {
     implementation(kotlin("stdlib", kotlinVersion))
     implementation(kotlin("reflect", kotlinVersion))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutinesVersion")
-    implementation("io.insert-koin","koin-core", koinVersion)
     implementation("io.ktor", "ktor-server-websockets", ktorVersion)
+    compileOnly("io.insert-koin","koin-core", koinVersion)
+    implementation("io.insert-koin","koin-ktor", koinVersion)
+    compileOnly("io.insert-koin","koin-annotations", koinAnnotationVersion)
+    ksp("io.insert-koin", "koin-ksp-compiler", koinAnnotationVersion)
 
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

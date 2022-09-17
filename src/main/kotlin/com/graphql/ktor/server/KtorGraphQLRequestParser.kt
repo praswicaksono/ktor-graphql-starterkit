@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.graphql.ktor
+package com.graphql.ktor.server
 
 import com.expediagroup.graphql.server.execution.GraphQLRequestParser
 import com.expediagroup.graphql.server.types.GraphQLServerRequest
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.ktor.server.request.ApplicationRequest
-import io.ktor.server.request.receiveText
+import com.graphql.ktor.services.ObjectMapperFactory
+import io.ktor.server.request.*
+import org.koin.core.annotation.Single
 import java.io.IOException
 
-/**
- * Custom logic for how Ktor parses the incoming [ApplicationRequest] into the [GraphQLServerRequest]
- */
+@Single
 class KtorGraphQLRequestParser(
-    private val mapper: ObjectMapper
+    objectMapperFactory: ObjectMapperFactory
 ) : GraphQLRequestParser<ApplicationRequest> {
+
+    private val mapper: ObjectMapper = objectMapperFactory.buildJacksonObjectMapper()
 
     @Suppress("BlockingMethodInNonBlockingContext")
     override suspend fun parseRequest(request: ApplicationRequest): GraphQLServerRequest = try {

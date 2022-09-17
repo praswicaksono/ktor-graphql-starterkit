@@ -1,35 +1,81 @@
-/*
- * Copyright 2022 Expedia, Inc
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.graphql.ktor
 
+import com.expediagroup.graphql.dataloader.KotlinDataLoader
 import com.expediagroup.graphql.generator.extensions.print
-import io.ktor.http.ContentType
-import io.ktor.server.application.Application
-import io.ktor.server.application.call
-import io.ktor.server.application.install
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Routing
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.routing
+import com.graphql.ktor.di.GraphQLSchemaModule
+import com.graphql.ktor.di.GraphQLServerModule
+import com.graphql.ktor.di.ServicesModule
+import com.graphql.ktor.schema.dataloaders.BookDataLoader
+import com.graphql.ktor.schema.dataloaders.CourseDataLoader
+import com.graphql.ktor.schema.dataloaders.GraphQLDataLoaderBuilder
+import com.graphql.ktor.schema.dataloaders.UniversityDataLoader
+import com.graphql.ktor.schema.mutations.GraphQLMutationBuilder
+import com.graphql.ktor.schema.mutations.LoginMutationService
+import com.graphql.ktor.schema.queries.*
+import com.graphql.ktor.schema.subscriptions.GraphQLSubscriptionBuilder
+import com.graphql.ktor.schema.subscriptions.SampleSubscription
+import com.graphql.ktor.server.GraphQLSchemaFactory
+import com.graphql.ktor.server.KtorServer
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import io.ktor.websocket.*
+import org.koin.ksp.generated.module
+import org.koin.ktor.ext.inject
+import org.koin.ktor.plugin.Koin
+
+
+/**
+ * Setup GraphQL Queries
+ */
+fun Application.queryBuilder(builder: GraphQLQueryBuilder) {
+    builder.addQuery(inject<BookQueryService>().value)
+    builder.addQuery(inject<HelloQueryService>().value)
+    builder.addQuery(inject<CourseQueryService>().value)
+    builder.addQuery(inject<UniversityQueryService>().value)
+}
+
+/**
+ * Setup GraphQL Mutation
+ */
+fun Application.mutationBuilder(builder: GraphQLMutationBuilder) {
+    builder.add(inject<LoginMutationService>().value)
+}
+
+/**
+ * Setup GraphQL Subscription
+ */
+fun Application.subscriptionBuilder(builder: GraphQLSubscriptionBuilder) {
+    builder.add(inject<SampleSubscription>().value)
+}
+
+fun Application.dataloaderBuilder(builder: GraphQLDataLoaderBuilder) {
+    builder.add(inject<CourseDataLoader>().value as KotlinDataLoader<Any, Any>)
+    builder.add(inject<BookDataLoader>().value as KotlinDataLoader<Any, Any>)
+    builder.add(inject<UniversityDataLoader>().value as KotlinDataLoader<Any, Any>)
+}
 
 fun Application.graphQLModule() {
+    install(Koin) {
+        modules(
+            listOf(
+                GraphQLServerModule().module,
+                GraphQLSchemaModule().module,
+                ServicesModule().module
+            )
+        )
+    }
+
+    this.queryBuilder(inject<GraphQLQueryBuilder>().value)
+    this.mutationBuilder(inject<GraphQLMutationBuilder>().value)
+    this.subscriptionBuilder(inject<GraphQLSubscriptionBuilder>().value)
+    this.dataloaderBuilder(inject<GraphQLDataLoaderBuilder>().value)
+
+    // initialize graphql ktor server
+    val ktorServer by inject<KtorServer>()
+    val graphQLSchemaFactory by inject<GraphQLSchemaFactory>()
+
     install(WebSockets)
     install(Routing)
     routing {
@@ -37,11 +83,11 @@ fun Application.graphQLModule() {
             //@Todo: implement graphQL websocket subscription protocol
         }
         post("graphql") {
-            KtorServer().handle(this.call)
+            ktorServer.handle(this.call)
         }
 
         get("sdl") {
-            call.respondText(graphQLSchema.print())
+            call.respondText(graphQLSchemaFactory.schema().print())
         }
 
         get("playground") {
