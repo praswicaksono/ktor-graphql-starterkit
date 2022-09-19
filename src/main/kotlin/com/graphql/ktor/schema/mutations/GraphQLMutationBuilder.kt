@@ -6,9 +6,9 @@ import org.koin.core.annotation.Single
 
 @Single
 class GraphQLMutationBuilder {
-    private val mutations: MutableList<TopLevelObject> = mutableListOf<TopLevelObject>()
+    private val mutations: MutableList<TopLevelObject> = mutableListOf()
 
-    fun add(mutation: Mutation): Unit {
+    fun add(mutation: Mutation) {
         mutations.add(TopLevelObject(mutation))
     }
 

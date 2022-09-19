@@ -14,7 +14,8 @@ class UniversityDataLoader : KotlinDataLoader<Int, University?> {
         const val dataLoaderName = "UNIVERSITY_LOADER"
     }
 
-    override val dataLoaderName = "UNIVERSITY_LOADER"
+    override val dataLoaderName = UniversityDataLoader.dataLoaderName
+
     override fun getDataLoader(): DataLoader<Int, University?> =
         DataLoaderFactory.newDataLoader<Int, University?> { ids ->
             CompletableFuture.supplyAsync {

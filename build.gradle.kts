@@ -33,6 +33,8 @@ val logbackVersion: String by project
 val kotlinVersion: String by project
 val koinVersion: String by project
 val koinAnnotationVersion: String by project
+val kMongoVersion: String by project
+val hopliteVersion: String by project
 
 dependencies {
     // https://mvnrepository.com/artifact/com.expediagroup/graphql-kotlin-server
@@ -44,6 +46,13 @@ dependencies {
     implementation(kotlin("reflect", kotlinVersion))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutinesVersion")
     implementation("io.ktor", "ktor-server-websockets", ktorVersion)
+    implementation("io.ktor", "ktor-server-cors", ktorVersion)
+    implementation("io.ktor", "ktor-server-auth", ktorVersion)
+    implementation("io.ktor", "ktor-server-auth-jwt", ktorVersion)
+    implementation("com.sksamuel.hoplite", "hoplite-core", hopliteVersion)
+    implementation("com.sksamuel.hoplite", "hoplite-yaml", hopliteVersion)
+    implementation("org.litote.kmongo", "kmongo-serialization", kMongoVersion)
+    implementation("org.litote.kmongo", "kmongo-coroutine-serialization", kMongoVersion)
     compileOnly("io.insert-koin","koin-core", koinVersion)
     implementation("io.insert-koin","koin-ktor", koinVersion)
     compileOnly("io.insert-koin","koin-annotations", koinAnnotationVersion)
@@ -52,7 +61,7 @@ dependencies {
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
         freeCompilerArgs = listOf("-Xjsr305=strict")
     }
 }

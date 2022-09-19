@@ -14,7 +14,8 @@ class BookDataLoader : KotlinDataLoader<List<Int>, List<Book>> {
         const val dataLoaderName = "BATCH_BOOK_LOADER"
     }
 
-    override val dataLoaderName = "BATCH_BOOK_LOADER"
+    override val dataLoaderName = BookDataLoader.dataLoaderName
+
     override fun getDataLoader(): DataLoader<List<Int>, List<Book>> =
         DataLoaderFactory.newDataLoader<List<Int>, List<Book>> { ids ->
             CompletableFuture.supplyAsync {

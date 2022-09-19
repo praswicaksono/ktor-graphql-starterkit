@@ -1,37 +1,48 @@
 package com.graphql.ktor.server
 
-
 import com.expediagroup.graphql.server.execution.GraphQLServer
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.graphql.ktor.services.ObjectMapperFactory
+import com.graphql.ktor.services.JacksonObjectMapperFactory
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
 @Single
 class KtorServer(
     graphQLServerFactory: KtorGraphQLServerFactory,
-    objectMapperFactory: ObjectMapperFactory
+    objectMapperFactory: JacksonObjectMapperFactory
 ) {
 
-    private val ktorGraphQLServer: GraphQLServer<ApplicationRequest> = graphQLServerFactory.build()
-    private val objectMapper: ObjectMapper = objectMapperFactory.buildJacksonObjectMapper()
+    private val ktorGraphQLServer: GraphQLServer<ApplicationRequest> by lazy {
+        graphQLServerFactory.create()
+    }
 
-    /**
-     * Handle incoming Ktor Http requests and send them back to the response methods.
-     */
+    private val objectMapper: ObjectMapper by lazy {
+        objectMapperFactory.create()
+    }
+
     suspend fun handle(applicationCall: ApplicationCall) {
-        // Execute the query against the schema
-        val result = ktorGraphQLServer.execute(applicationCall.request)
+        withContext(Dispatchers.IO) {
 
-        if (result != null) {
-            // write response as json
+            val job = async {
+                // Execute the query against the schema
+                ktorGraphQLServer.execute(applicationCall.request)
+            }
+
+            val result = job.await()
+
+            if (result == null) {
+                applicationCall.response.call.respond(HttpStatusCode.BadRequest, "Invalid request")
+            }
+
             val json = objectMapper.writeValueAsString(result)
             applicationCall.response.call.respond(json)
-        } else {
-            applicationCall.response.call.respond(HttpStatusCode.BadRequest, "Invalid request")
         }
     }
 }

@@ -14,7 +14,8 @@ class CourseDataLoader : KotlinDataLoader<Int, Course?> {
         const val dataLoaderName = "COURSE_LOADER"
     }
 
-    override val dataLoaderName = "COURSE_LOADER"
+    override val dataLoaderName = CourseDataLoader.dataLoaderName
+
     override fun getDataLoader(): DataLoader<Int, Course?> = DataLoaderFactory.newDataLoader<Int, Course?> { ids ->
         CompletableFuture.supplyAsync {
             runBlocking { Course.search(ids).toMutableList() }

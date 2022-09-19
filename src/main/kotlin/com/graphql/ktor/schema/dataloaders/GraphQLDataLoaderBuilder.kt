@@ -5,11 +5,11 @@ import org.koin.core.annotation.Single
 
 @Single
 class GraphQLDataLoaderBuilder {
-    private val dataloaders: MutableList<KotlinDataLoader<Any, Any>> = mutableListOf()
+    private val dataloaders: MutableList<KotlinDataLoader<*, *>> = mutableListOf()
 
-    fun add(dataloader: KotlinDataLoader<Any, Any>) {
+    fun add(dataloader: KotlinDataLoader<*, *>) {
         dataloaders.add(dataloader)
     }
 
-    fun build(): List<KotlinDataLoader<Any, Any>> = dataloaders
+    fun build(): List<KotlinDataLoader<*, *>> = dataloaders
 }

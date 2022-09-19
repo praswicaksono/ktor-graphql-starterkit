@@ -1,0 +1,7 @@
+env: prod
+
+database:
+  mongoDsn: "mongodb://root:root@localhost:27017/?authSource=admin"
+
+server:
+  enablePlayground: true

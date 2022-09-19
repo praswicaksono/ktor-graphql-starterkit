@@ -1,6 +1,5 @@
 package com.graphql.ktor
 
-import com.expediagroup.graphql.dataloader.KotlinDataLoader
 import com.expediagroup.graphql.generator.extensions.print
 import com.graphql.ktor.di.GraphQLSchemaModule
 import com.graphql.ktor.di.GraphQLServerModule
@@ -14,8 +13,10 @@ import com.graphql.ktor.schema.mutations.LoginMutationService
 import com.graphql.ktor.schema.queries.*
 import com.graphql.ktor.schema.subscriptions.GraphQLSubscriptionBuilder
 import com.graphql.ktor.schema.subscriptions.SampleSubscription
+import com.graphql.ktor.server.GraphQLFactory
 import com.graphql.ktor.server.GraphQLSchemaFactory
 import com.graphql.ktor.server.KtorServer
+import com.graphql.ktor.services.ConfigFactory
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -24,7 +25,6 @@ import io.ktor.server.websocket.*
 import org.koin.ksp.generated.module
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
-
 
 /**
  * Setup GraphQL Queries
@@ -50,10 +50,13 @@ fun Application.subscriptionBuilder(builder: GraphQLSubscriptionBuilder) {
     builder.add(inject<SampleSubscription>().value)
 }
 
+/**
+ * Setup GraphQL Dataloader
+ */
 fun Application.dataloaderBuilder(builder: GraphQLDataLoaderBuilder) {
-    builder.add(inject<CourseDataLoader>().value as KotlinDataLoader<Any, Any>)
-    builder.add(inject<BookDataLoader>().value as KotlinDataLoader<Any, Any>)
-    builder.add(inject<UniversityDataLoader>().value as KotlinDataLoader<Any, Any>)
+    builder.add(inject<CourseDataLoader>().value)
+    builder.add(inject<BookDataLoader>().value)
+    builder.add(inject<UniversityDataLoader>().value)
 }
 
 fun Application.graphQLModule() {
@@ -75,6 +78,7 @@ fun Application.graphQLModule() {
     // initialize graphql ktor server
     val ktorServer by inject<KtorServer>()
     val graphQLSchemaFactory by inject<GraphQLSchemaFactory>()
+    val config by inject<ConfigFactory>()
 
     install(WebSockets)
     install(Routing)
@@ -87,11 +91,13 @@ fun Application.graphQLModule() {
         }
 
         get("sdl") {
-            call.respondText(graphQLSchemaFactory.schema().print())
+            call.respondText(graphQLSchemaFactory.create().print())
         }
 
-        get("playground") {
-            this.call.respondText(buildPlaygroundHtml("graphql", "subscriptions"), ContentType.Text.Html)
+        if (config.create().server.enablePlayground) {
+            get("playground") {
+                this.call.respondText(buildPlaygroundHtml("graphql", "subscriptions"), ContentType.Text.Html)
+            }
         }
     }
 }
